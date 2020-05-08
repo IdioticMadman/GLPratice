@@ -1,0 +1,3 @@
+rootProject.name='GLPratice'
+include ':app'
+include ':airhockey'
