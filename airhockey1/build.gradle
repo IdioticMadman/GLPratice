@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "com.example.airhockey"
+        applicationId "com.example.airhockey1"
         minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
@@ -19,10 +19,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-
-    sourceSets{
-        main.java.srcDirs += ['src/main/kotlin']
     }
 
 }

@@ -9,6 +9,8 @@ import javax.microedition.khronos.opengles.GL10
 
 class MainActivity : AppCompatActivity() {
 
+    val data = ArrayList<String>()
+
     lateinit var mGlSurfaceView: GLSurfaceView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

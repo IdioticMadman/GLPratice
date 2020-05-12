@@ -3,7 +3,7 @@ package com.example.airhockey;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 
-import com.example.airhockey.utils.LogConfig;
+import com.example.airhockey.utils.LoggerConfig;
 import com.example.airhockey.utils.ShaderHelper;
 
 import java.nio.ByteBuffer;
@@ -17,7 +17,7 @@ import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
 import static android.opengl.GLES20.GL_FLOAT;
 import static android.opengl.GLES20.GL_LINES;
 import static android.opengl.GLES20.GL_POINTS;
-import static android.opengl.GLES20.GL_TRIANGLES;
+import static android.opengl.GLES20.GL_TRIANGLE_FAN;
 import static android.opengl.GLES20.glClear;
 import static android.opengl.GLES20.glClearColor;
 import static android.opengl.GLES20.glDrawArrays;
@@ -29,7 +29,7 @@ import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.GLES20.glViewport;
 
-public class AirHockeyRender implements GLSurfaceView.Renderer {
+public class AirHockeyRenderer implements GLSurfaceView.Renderer {
     public static final int POSITION_COMPONENT_COUNT = 2;
     public static final int BYTE_PER_FLOAT = 4;
     private final FloatBuffer vertexData;
@@ -41,49 +41,28 @@ public class AirHockeyRender implements GLSurfaceView.Renderer {
     public static final String A_POSITION = "a_Position";
     private int aPositionLocation;
 
-    /**
-     * 顶点数据
-     */
-    private float[] tableVertices = {
-            0f, 0f,
-            0f, 14f,
-            9f, 14f,
-            9f, 0f
-    };
-
     private int mLinkProgramId;
 
-    public AirHockeyRender(Context context) {
+    public AirHockeyRenderer(Context context) {
         this.mContext = context;
         //三角形都是逆时针的，卷曲顺序
         float[] tableVerticesWithTriangles = {
-                //triangles 1
-                -0.5f, -0.5f,
-                0.5f, 0.5f,
-                -0.5f, 0.5f,
-                //triangles 2
-                -0.5f, -0.5f,
-                0.5f, -0.5f,
-                0.5f, 0.5f,
-
-                -0.45f, -0.45f,
-                0.45f, 0.45f,
-                -0.45f, 0.45f,
-                //triangles 2
-                -0.45f, -0.45f,
-                0.45f, -0.45f,
-                0.45f, 0.45f,
+                // X, Y, R, G, B
+                //triangles fan
+                0.0f, 0.0f, 1f, 1f, 1f,
+                -0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
+                0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
+                0.5f, 0.5f, 0.7f, 0.7f, 0.7f,
+                -0.5f, 0.5f, 0.7f, 0.7f, 0.7f,
+                -0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
 
                 // line1
-                -0.5f, 0f,
-                0.5f, 0f,
-
-                1.0f, 1.0f,
-                -1.0f, 1.0f,
+                -0.5f, 0f, 1f, 0f, 0f,
+                0.5f, 0f, 1f, 0f, 0f,
 
                 // mallets
-                0.0f, 0.25f,
-                0.0f, -0.25f
+                0.0f, -0.25f, 0f, 0f, 1f,
+                0.0f, 0.25f, 1f, 0f, 0f,
         };
         vertexData = ByteBuffer
                 .allocateDirect(tableVerticesWithTriangles.length * BYTE_PER_FLOAT)
@@ -99,13 +78,13 @@ public class AirHockeyRender implements GLSurfaceView.Renderer {
         final String vertexShader = TextResourceReader
                 .readTextFileFromResource(mContext, R.raw.sample_vertex_shader);
         final String fragShader = TextResourceReader
-                .readTextFileFromResource(mContext, R.raw.fragment_shader);
+                .readTextFileFromResource(mContext, R.raw.sample_fragment_shader);
         // 编译shader
         final int vertexShaderId = ShaderHelper.compileVertexShader(vertexShader);
         final int fragShaderId = ShaderHelper.compileFragShader(fragShader);
         // 链接shader
         final int linkProgramId = ShaderHelper.linkProgram(vertexShaderId, fragShaderId);
-        if (LogConfig.ON) {
+        if (LoggerConfig.ON) {
             ShaderHelper.validateProgram(linkProgramId);
         }
         // 使用program
@@ -135,21 +114,17 @@ public class AirHockeyRender implements GLSurfaceView.Renderer {
         // 设置fragShader的color
         glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
         // 画两个三角形-> 桌子
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        // 设置fragShader的color
-        glUniform4f(uColorLocation, 0f, 0f, 0f, 1.0f);
-        // 画两个三角形-> 桌子
-        glDrawArrays(GL_TRIANGLES, 6, 6);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
 
         // 设置fragShader的color
         glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
         // 画直线 -> 球杆
-        glDrawArrays(GL_LINES, 12, 2);
+        glDrawArrays(GL_LINES, 6, 2);
 
         glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f);
-        glDrawArrays(GL_POINTS, 14, 1);
+        glDrawArrays(GL_POINTS, 8, 1);
 
-        glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f);
-        glDrawArrays(GL_POINTS, 15, 1);
+        glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
+        glDrawArrays(GL_POINTS, 9, 1);
     }
 }

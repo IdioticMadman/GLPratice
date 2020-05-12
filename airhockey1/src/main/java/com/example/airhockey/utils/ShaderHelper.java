@@ -34,76 +34,111 @@ public class ShaderHelper {
     }
 
     private static int compileShader(int type, String shaderCode) {
-        // 创建shader引用
+        // Create a new shader object.
         final int shaderObjectId = glCreateShader(type);
+
         if (shaderObjectId == 0) {
-            if (LogConfig.ON) {
-                Log.w(TAG, "compileShader: Could not create shader");
+            if (LoggerConfig.ON) {
+                Log.w(TAG, "Could not create new shader.");
             }
+
             return 0;
         }
-        // 设置shader source
+
+        // Pass in the shader source.
         glShaderSource(shaderObjectId, shaderCode);
-        // 编译shader
+
+        // Compile the shader.
         glCompileShader(shaderObjectId);
+
+        // Get the compilation status.
         final int[] compileStatus = new int[1];
-        // 获取编译shader的状态
-        glGetShaderiv(shaderObjectId, GL_COMPILE_STATUS, compileStatus, 0);
-        if (LogConfig.ON) {
-            // 打印shader编译日志
-            String info = glGetShaderInfoLog(shaderObjectId);
-            Log.i(TAG, "Results of compiling source:  \n" + shaderCode + "\n: " + info);
+        glGetShaderiv(shaderObjectId, GL_COMPILE_STATUS,
+                compileStatus, 0);
+
+        if (LoggerConfig.ON) {
+            // Print the shader info log to the Android log output.
+            Log.v(TAG, "Results of compiling source:"
+                    + "\n" + shaderCode + "\n:"
+                    + glGetShaderInfoLog(shaderObjectId));
         }
+
+        // Verify the compile status.
         if (compileStatus[0] == 0) {
-            //编译失败，删除shader
+            // If it failed, delete the shader object.
             glDeleteShader(shaderObjectId);
-            if (LogConfig.ON) {
-                Log.w(TAG, "compileShader failed, delete");
+
+            if (LoggerConfig.ON) {
+                Log.w(TAG, "Compilation of shader failed.");
             }
+
             return 0;
         }
-        // 编译成功返回shader进行使用
+
+        // Return the shader object ID.
         return shaderObjectId;
     }
 
     public static int linkProgram(int vertexShaderId, int fragShaderId) {
-        // 创建program对象
+        // Create a new program object.
         final int programObjectId = glCreateProgram();
+
         if (programObjectId == 0) {
-            if (LogConfig.ON) {
-                Log.w(TAG, "createProgram failed: ");
+            if (LoggerConfig.ON) {
+                Log.w(TAG, "Could not create new program");
             }
+
             return 0;
         }
-        // 将顶点着色器和片元着色器依附到 program上
+
+        // Attach the vertex shader to the program.
         glAttachShader(programObjectId, vertexShaderId);
+
+        // Attach the fragment shader to the program.
         glAttachShader(programObjectId, fragShaderId);
-        // 链接着色器
+
+        // Link the two shaders together into a program.
         glLinkProgram(programObjectId);
 
+        // Get the link status.
         final int[] linkStatus = new int[1];
-        // 获取连接器的状态
-        glGetProgramiv(programObjectId, GL_LINK_STATUS, linkStatus, 0);
-        if (LogConfig.ON) {
-            Log.i(TAG, "Results of linking Program: \n" + glGetProgramInfoLog(programObjectId));
+        glGetProgramiv(programObjectId, GL_LINK_STATUS,
+                linkStatus, 0);
+
+        if (LoggerConfig.ON) {
+            // Print the program info log to the Android log output.
+            Log.v(TAG, "Results of linking program:\n"
+                    + glGetProgramInfoLog(programObjectId));
         }
+
+        // Verify the link status.
         if (linkStatus[0] == 0) {
-            // 如果链接失败，删除program
+            // If it failed, delete the program object.
             glDeleteProgram(programObjectId);
-            if (LogConfig.ON) {
-                Log.w(TAG, "linking of program failed! ");
+
+            if (LoggerConfig.ON) {
+                Log.w(TAG, "Linking of program failed.");
             }
+
             return 0;
         }
+
+        // Return the program object ID.
         return programObjectId;
     }
 
+    /**
+     * Validates an OpenGL program. Should only be called when developing the
+     * application.
+     */
     public static boolean validateProgram(int programObjectId) {
         glValidateProgram(programObjectId);
         final int[] validateStatus = new int[1];
-        glGetProgramiv(programObjectId, GL_VALIDATE_STATUS, validateStatus, 0);
-        Log.i(TAG, "Results of validate Program: " + validateStatus[0] + "\n Log: "
-                + glGetProgramInfoLog(programObjectId));
+        glGetProgramiv(programObjectId, GL_VALIDATE_STATUS,
+                validateStatus, 0);
+        Log.v(TAG, "Results of validating program: " + validateStatus[0]
+                + "\nLog:" + glGetProgramInfoLog(programObjectId));
+
         return validateStatus[0] != 0;
     }
 }
